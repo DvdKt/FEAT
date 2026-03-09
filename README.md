@@ -1,13 +1,11 @@
 # Werkzeugerkennung
 ATP Projektarbeit - An integrated mobile-to-backend solution for tool recognition using Android (Kotlin), Python (Chaquopy), and PyTorch (FEAT).
 -------------------------------------
-
-Vision
+*****Vision*****
 
 Bridge high-performance deep learning backends with mobile accessibility. This project enables real-time tool recognition by embedding a local Python environment within Android while supporting a remote, robust inference backend.
 -------------------------------------
-
-Key Features
+*****Key Features*****
 
 - Hybrid Integration: Kotlin-based Android app with local Python execution via Chaquopy.
 - Seamless Connectivity: Direct communication between the mobile client and a Linux-based Python backend.
@@ -15,8 +13,7 @@ Key Features
 - Flexible Operation: Supports both Semi-Automatic (human-in-the-loop) and Full-Automatic inference modes.
 - Customizable Logic: Granular control over confidence thresholds (T_CONF) and prediction margins (T_MARGIN).
 -------------------------------------
-
-QUICK START
+*****QUICK START*****
 
 Prerequisites:
 - Backend: Linux environment with Python 3.x.
@@ -28,8 +25,7 @@ Installation:
 2. Initialize the backend using the install_linux.sh script
 3. Run the back end server using the run_backend_linux.sh script
 -------------------------------------
-
-ANDROID CONFIGURATION
+*****ANDROID CONFIGURATION*****
 
 Backend connection:
 1. Navigate to the session screen in the app.
@@ -51,14 +47,12 @@ T_CONF,Minimum confidence to accept,0.8
 T_MARGIN,Min gap between top-1 and top-2,0.1
 
 -------------------------------------
-
-OG_FEAT Model Setup
+*****OG_FEAT Model Setup*****
 
 The pretrained weights (feat-5-shot.pth) are reqired but not tracked in git.
 Download the file from https://github.com/Sha-Lab/FEAT and update OG_FEAT_INIT_WEIGHTS in your .env to the absolute path of the file.
 -------------------------------------
-
-Inference Modes
+*****Inference Modes*****
 
 - Semi-Automatic: Every prediction requires manual confirmation before saving (env_code=PostTraining).
 - Full-Automatic: High-confidence predictions save automatically; low-confidence ones prompt for correction.
