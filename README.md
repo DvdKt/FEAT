@@ -49,7 +49,7 @@ Manage your setup via the backend/.env file.
 - ***Seamless Connectivity:*** Direct communication between the mobile client and a Linux-based Python backend.
 - ***Advanced AI Inference:*** Utilizes OG_FEAT (Few-Shot Embedding Adaptation Transformer) for high-accuracy recognition.
 - ***Flexible Operation:*** Supports both Semi-Automatic (human-in-the-loop) and Full-Automatic inference modes.
--***Customizable Logic:*** Granular control over confidence thresholds (T_CONF) and prediction margins (T_MARGIN).
+- ***Customizable Logic:*** Granular control over confidence thresholds (T_CONF) and prediction margins (T_MARGIN).
 
 -------------------------------------
 *****OG_FEAT Model Setup*****
