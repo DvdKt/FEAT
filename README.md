@@ -37,8 +37,8 @@ Backend connection:
 2. Set the Backend base URL to the address printed during the backend startup.
    Default Emulator URL: https://10.0.2.2:8000
 
-Pro tip: "If the app cannot connect, use ADB in your terminal to route the traffic:
-   adb reverse tcp:8000 tcp:8000
+**Pro tip:** *"If the app cannot connect, use ADB in your terminal to route the traffic:*
+   *adb reverse tcp:8000 tcp:8000*
 
 -------------------------------------
 *****Configuration and enviroments:*****
