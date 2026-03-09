@@ -72,7 +72,7 @@ class MultiHeadAttention(nn.Module):
 
         return output
     
-class SemiFEAT(FewShotModel):
+class FEAT(FewShotModel):
     def __init__(self, args):
         super().__init__(args)
         if args.backbone_class == 'ConvNet':
@@ -103,8 +103,7 @@ class SemiFEAT(FewShotModel):
     
         # query: (num_batch, num_query, num_proto, num_emb)
         # proto: (num_batch, num_proto, num_emb)
-        whole_set = torch.cat([proto, query.view(num_batch, -1, emb_dim)], 1)
-        proto = self.slf_attn(proto, whole_set, whole_set)        
+        proto = self.slf_attn(proto, proto, proto)        
         if self.args.use_euclidean:
             query = query.view(-1, emb_dim).unsqueeze(1) # (Nbatch*Nq*Nw, 1, d)
             proto = proto.unsqueeze(1).expand(num_batch, num_query, num_proto, emb_dim).contiguous()

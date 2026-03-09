@@ -4,6 +4,7 @@ import numpy as np
 import torch.nn.functional as F
 
 from model.models import FewShotModel
+from model.utils import one_hot
 
 class ScaledDotProductAttention(nn.Module):
     ''' Scaled Dot-Product Attention '''
@@ -72,7 +73,7 @@ class MultiHeadAttention(nn.Module):
 
         return output
     
-class SemiFEAT(FewShotModel):
+class SemiProtoFEAT(FewShotModel):
     def __init__(self, args):
         super().__init__(args)
         if args.backbone_class == 'ConvNet':
@@ -88,6 +89,33 @@ class SemiFEAT(FewShotModel):
         
         self.slf_attn = MultiHeadAttention(1, hdim, hdim, hdim, dropout=0.5)          
         
+    def get_proto(self, x_shot, x_pool):
+        # get the prototypes based w/ an unlabeled pool set
+        num_batch, num_shot, num_way, emb_dim = x_shot.shape
+        num_pool_shot = x_pool.shape[1]
+        num_pool = num_pool_shot * num_way
+        label_support = torch.arange(num_way).repeat(num_shot).type(torch.LongTensor)
+        label_support_onehot = one_hot(label_support, num_way)   
+        label_support_onehot = label_support_onehot.unsqueeze(0).repeat([num_batch, 1, 1])
+        if torch.cuda.is_available():
+            label_support_onehot = label_support_onehot.cuda()
+            
+        proto_shot = x_shot.mean(dim = 1)
+        if self.args.use_euclidean:
+            dis = - torch.sum((proto_shot.unsqueeze(1).expand(num_batch, num_pool, num_way, emb_dim).contiguous().view(num_batch*num_pool, num_way, emb_dim) - x_pool.view(-1, emb_dim).unsqueeze(1)) ** 2, 2) / self.args.temperature
+        else:
+            dis = torch.bmm(x_pool.view(num_batch, -1, emb_dim), F.normalize(proto_shot, dim=-1).permute([0,2,1])) / self.args.temperature
+                
+        dis = dis.view(num_batch, -1, num_way)
+        z_hat = F.softmax(dis, dim=2)
+        z = torch.cat([label_support_onehot, z_hat], dim = 1)              # (num_batch, n_shot + n_pool, n_way)
+        h = torch.cat([x_shot.view(num_batch, -1, emb_dim), x_pool.view(num_batch, -1, emb_dim)], dim = 1)        # (num_batch, n_shot + n_pool, n_embedding)
+
+        proto = torch.bmm(z.permute([0,2,1]), h)
+        sum_z = z.sum(dim = 1).view((num_batch, -1, 1))
+        proto = proto / sum_z
+        return proto        
+        
     def _forward(self, instance_embs, support_idx, query_idx):
         emb_dim = instance_embs.size(-1)
 
@@ -95,16 +123,21 @@ class SemiFEAT(FewShotModel):
         support = instance_embs[support_idx.contiguous().view(-1)].contiguous().view(*(support_idx.shape + (-1,)))
         query   = instance_embs[query_idx.contiguous().view(-1)].contiguous().view(  *(query_idx.shape   + (-1,)))
     
+        num_batch = support.shape[0]
+        num_shot, num_way = support.shape[1], support.shape[2]
+        num_query = np.prod(query_idx.shape[-2:])    
+        
+        # transformation
+        whole_set = torch.cat([support.view(num_batch, -1, emb_dim), query.view(num_batch, -1, emb_dim)], 1)
+        support = self.slf_attn(support.view(num_batch, -1, emb_dim), whole_set, whole_set).view(num_batch, num_shot, num_way, emb_dim)
+        
         # get mean of the support
-        proto = support.mean(dim=1) # Ntask x NK x d
-        num_batch = proto.shape[0]
+        proto = self.get_proto(support, query) # we can also use adapted query set here to achieve better results
+        # proto = support.mean(dim=1) # Ntask x NK x d
         num_proto = proto.shape[1]
-        num_query = np.prod(query_idx.shape[-2:])
     
         # query: (num_batch, num_query, num_proto, num_emb)
         # proto: (num_batch, num_proto, num_emb)
-        whole_set = torch.cat([proto, query.view(num_batch, -1, emb_dim)], 1)
-        proto = self.slf_attn(proto, whole_set, whole_set)        
         if self.args.use_euclidean:
             query = query.view(-1, emb_dim).unsqueeze(1) # (Nbatch*Nq*Nw, 1, d)
             proto = proto.unsqueeze(1).expand(num_batch, num_query, num_proto, emb_dim).contiguous()

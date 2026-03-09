@@ -5,6 +5,8 @@ import torch.nn.functional as F
 
 from model.models import FewShotModel
 
+# No-Reg for FEAT-STAR here
+
 class ScaledDotProductAttention(nn.Module):
     ''' Scaled Dot-Product Attention '''
 
@@ -72,7 +74,7 @@ class MultiHeadAttention(nn.Module):
 
         return output
     
-class SemiFEAT(FewShotModel):
+class FEATSTAR(FewShotModel):
     def __init__(self, args):
         super().__init__(args)
         if args.backbone_class == 'ConvNet':
@@ -103,47 +105,25 @@ class SemiFEAT(FewShotModel):
     
         # query: (num_batch, num_query, num_proto, num_emb)
         # proto: (num_batch, num_proto, num_emb)
-        whole_set = torch.cat([proto, query.view(num_batch, -1, emb_dim)], 1)
-        proto = self.slf_attn(proto, whole_set, whole_set)        
+        query = query.view(-1, emb_dim).unsqueeze(1)
+
+        proto = proto.unsqueeze(1).expand(num_batch, num_query, num_proto, emb_dim).contiguous()
+        proto = proto.view(num_batch*num_query, num_proto, emb_dim)
+
+        # refine by Transformer
+        combined = torch.cat([proto, query], 1) # Nk x (N + 1) x d, batch_size = NK
+        combined = self.slf_attn(combined, combined, combined)
+        # compute distance for all batches
+        proto, query = combined.split(num_proto, 1)
+        
         if self.args.use_euclidean:
             query = query.view(-1, emb_dim).unsqueeze(1) # (Nbatch*Nq*Nw, 1, d)
-            proto = proto.unsqueeze(1).expand(num_batch, num_query, num_proto, emb_dim).contiguous()
-            proto = proto.view(num_batch*num_query, num_proto, emb_dim) # (Nbatch x Nq, Nk, d)
 
             logits = - torch.sum((proto - query) ** 2, 2) / self.args.temperature
-        else:
+        else: # cosine similarity: more memory efficient
             proto = F.normalize(proto, dim=-1) # normalize for cosine distance
-            query = query.view(num_batch, -1, emb_dim) # (Nbatch,  Nq*Nw, d)
-
+            
             logits = torch.bmm(query, proto.permute([0,2,1])) / self.args.temperature
             logits = logits.view(-1, num_proto)
         
-        # for regularization
-        if self.training:
-            aux_task = torch.cat([support.view(1, self.args.shot, self.args.way, emb_dim), 
-                                  query.view(1, self.args.query, self.args.way, emb_dim)], 1) # T x (K+Kq) x N x d
-            num_query = np.prod(aux_task.shape[1:3])
-            aux_task = aux_task.permute([0, 2, 1, 3])
-            aux_task = aux_task.contiguous().view(-1, self.args.shot + self.args.query, emb_dim)
-            # apply the transformation over the Aug Task
-            aux_emb = self.slf_attn(aux_task, aux_task, aux_task) # T x N x (K+Kq) x d
-            # compute class mean
-            aux_emb = aux_emb.view(num_batch, self.args.way, self.args.shot + self.args.query, emb_dim)
-            aux_center = torch.mean(aux_emb, 2) # T x N x d
-            
-            if self.args.use_euclidean:
-                aux_task = aux_task.permute([1,0,2]).contiguous().view(-1, emb_dim).unsqueeze(1) # (Nbatch*Nq*Nw, 1, d)
-                aux_center = aux_center.unsqueeze(1).expand(num_batch, num_query, num_proto, emb_dim).contiguous()
-                aux_center = aux_center.view(num_batch*num_query, num_proto, emb_dim) # (Nbatch x Nq, Nk, d)
-    
-                logits_reg = - torch.sum((aux_center - aux_task) ** 2, 2) / self.args.temperature2
-            else:
-                aux_center = F.normalize(aux_center, dim=-1) # normalize for cosine distance
-                aux_task = aux_task.permute([1,0,2]).contiguous().view(num_batch, -1, emb_dim) # (Nbatch,  Nq*Nw, d)
-    
-                logits_reg = torch.bmm(aux_task, aux_center.permute([0,2,1])) / self.args.temperature2
-                logits_reg = logits_reg.view(-1, num_proto)            
-            
-            return logits, logits_reg            
-        else:
-            return logits   
+        return logits, None
