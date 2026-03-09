@@ -1,73 +1,64 @@
 # Werkzeugerkennung
-ATP Projektarbeit
+ATP Projektarbeit - An integrated mobile-to-backend solution for tool recognition using Android (Kotlin), Python (Chaquopy), and PyTorch (FEAT).
 -------------------------------------
-Android (local Python) integration
+Vision
 
-This branch embeds the Python backend inside the Android app using Chaquopy:
-- Python sources live in `app/src/main/python`.
-- The Kotlin app calls `backend.py` via `PythonBackendRepository`.
-- Images are passed as base64 strings to Python.
+Bridge high-performance deep learning backends with mobile accessibility. This project enables real-time tool recognition by embedding a local Python environment within Android while supporting a remote, robust inference backend.
+-------------------------------------
+Key Features
 
-Note: OG_FEAT head fine-tuning uses PyTorch (`og_feat_trainer.py` + `og_feat_utils.py`).
-PyTorch is not bundled for Android in this setup, so training will fail unless a
-mobile-compatible model path is added.
+- Hybrid Integration: Kotlin-based Android app with local Python execution via Chaquopy.
+- Seamless Connectivity: Direct communication between the mobile client and a Linux-based Python backend.
+- Advanced AI Inference: Utilizes OG_FEAT (Few-Shot Embedding Adaptation Transformer) for high-accuracy recognition.
+- Flexible Operation: Supports both Semi-Automatic (human-in-the-loop) and Full-Automatic inference modes.
+- Customizable Logic: Granular control over confidence thresholds (T_CONF) and prediction margins (T_MARGIN).
+-------------------------------------
+QUICK START
+
+Prerequisites:
+- Backend: Linux environment with Python 3.x.
+- Mobile: Android device or emulator (API level support for Chaquopy).
+- Network: Both the server (e.g., Mac/PC) and the tablet must be on the same Wi-Fi network.
+
+Installation:
+1. Clone the repository using: git clone <repo_url>
+2. Initialize the backend using the install_linux.sh script
+3. Run the back end server using the run_backend_linux.sh script
+-------------------------------------
+ANDROID CONFIGURATION
+
+Backend connection:
+1. Navigate to the session screen in the app.
+2. Set the Backend base URL to the address printed during the backend startup.
+   Default Emulator URL: https://10.0.2.2:8000
+
+Pro tip: "If the app cannot connect, use ADB in your terminal to route the traffic:
+   adb reverse tcp:8000 tcp:8000
+
+Configuration and enviroments:
+Manage your setup via the backend/.env file.
+
+Variable,Description,Default
+DATA_DIR,Directory for stored data,~/WerkzeugerkennungData
+API_KEY,Optional security header,None
+REQUIRE_API_KEY,Enforce X-API-Key for POST/PUT,false
+OG_FEAT_INIT_WEIGHTS,Path to pretrained weights,OG_FEAT/saves/...
+T_CONF,Minimum confidence to accept,0.8
+T_MARGIN,Min gap between top-1 and top-2,0.1
 
 -------------------------------------
-Run backend locally on Linux:
+OG_FEAT Model Setup
 
-1) Clone the repo and enter it:
-   git clone <repo_url>
-   cd Werkzeugerkennung
+The pretrained weights (feat-5-shot.pth) are reqired but not tracked in git.
+Download the file from https://github.com/Sha-Lab/FEAT and update OG_FEAT_INIT_WEIGHTS in your .env to the absolute path of the file.
+-------------------------------------
+Inference Modes
 
-2) Install the backend dependencies:
-   ./scripts/install_linux.sh
-
-3) Run the backend server:
-   ./scripts/run_backend_linux.sh
-
-The script prints the LAN URL and a healthcheck URL. Your Mac and the tablet must be on the
-same Wi-Fi, and the machine must stay awake.
-
-Data is stored in ~/WerkzeugerkennungData by default. You can override this in backend/.env
-via DATA_DIR.
-
-API key (optional): set API_KEY and REQUIRE_API_KEY=true in backend/.env to require the
-X-API-Key header for non-read endpoints.
-Then enter the same API key in the Android app's Backend section.
-
-Android app backend URL:
-- On the Session screen, set "Backend base URL" to the server URL printed by the script.
-- Default emulator URL is http://10.0.2.2:8000.
-
-In case the app fails to connect to the server, open the terminal in Android Studio
-and use the command: adb reverse tcp:8000 tcp:8000 to route the backend to https://0.0.0.0:8000
-
-Phase 2 (Inference / In-the-Wild):
-- Use "Start Inference" on the Session screen (requires a remote backend URL).
-- Before the first inference, choose Semi-Automatic or Full-Automatic.
-- Semi-Automatic: every accepted prediction prompts for confirmation and saves as env_code=PostTraining.
-- Full-Automatic: accepted predictions auto-save to env_code=PostTraining; low-confidence still asks for correction.
-- Unknown rejection uses decision thresholds:
-  - T_CONF: minimum confidence to accept (default 0.8)
-  - T_MARGIN: minimum gap between top-1 and top-2 (default 0.1; 0 disables)
-
-OG_FEAT backbone + head:
-- Default pretrained weights are loaded from `OG_FEAT/saves/initialization/tieredimagenet/feat-5-shot.pth`.
-- Override weight path with `OG_FEAT_INIT_WEIGHTS`.
-- The `feat-5-shot.pth` file is not tracked in Git; the backend loads it from the local path in `backend/.env`.
-   The file can be found at: https://github.com/Sha-Lab/FEAT.git
-- If `OG_FEAT_INIT_WEIGHTS` is an absolute path, update it per machine.
-- Override OG_FEAT root with `OG_FEAT_ROOT`.
-- Class ID mapping is persisted in `training/class_map.json` (name -> id).
-- Head fine-tuning settings:
-  - OG_FEAT_HEAD_EPOCHS (default 50)
-  - OG_FEAT_HEAD_LR (default 1e-3)
-  - OG_FEAT_HEAD_BALANCE (default 0.0)
-- Optional preprocessing overrides:
-  - OG_FEAT_IMAGE_SIZE (default 84)
-  - OG_FEAT_TEMPERATURE / OG_FEAT_TEMPERATURE2 (default 1.0 / 1.0)
-
+- Semi-Automatic: Every prediction requires manual confirmation before saving (env_code=PostTraining).
+- Full-Automatic: High-confidence predictions save automatically; low-confidence ones prompt for correction.
+-------------------------------------
 Troubleshooting:
-- Firewall: allow incoming connections for Python/uvicorn if prompted.
-- LAN IP: use `ipconfig getifaddr en0` (or en1) if the script prints 127.0.0.1.
-- Port conflicts: change BACKEND_PORT in backend/.env and restart.
+- Firewall Issues: Ensure your OS allows incoming connections for Python/Uvicorn.
+- 127.0.0.1 Error: If the script prints a loopback address, find your LAN IP manually (e.g., ipconfig getifaddr en0).
+- Port Conflicts: If 8000 is in use, modify BACKEND_PORT in .env and restart the backend.
+- PyTorch Training: Training via og_feat_trainer.py requires a desktop environment; PyTorch is not bundled for local Android training.
