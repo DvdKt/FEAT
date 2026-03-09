@@ -4,6 +4,7 @@ ATP Projektarbeit - An integrated mobile-to-backend solution for tool recognitio
 *****Vision*****
 
 Bridge high-performance deep learning backends with mobile accessibility. This project enables real-time tool recognition by embedding a local Python environment within Android while supporting a remote, robust inference backend.
+
 -------------------------------------
 *****Key Features*****
 
