@@ -1,6 +1,6 @@
 # Werkzeugerkennung
 
-ATP Projektarbeit - An integrated mobile-to-backend solution for tool recognition using Android (Kotlin), Python (Chaquopy), and PyTorch (FEAT).
+An integrated mobile-to-backend solution for tool recognition using Android (Kotlin), Python (Chaquopy), and PyTorch (FEAT), made by the WZL institute at RWTH Aachen.
 
 -------------------------------------
 *****Vision*****
@@ -40,6 +40,7 @@ Backend connection:
 Pro tip: "If the app cannot connect, use ADB in your terminal to route the traffic:
    adb reverse tcp:8000 tcp:8000
 
+-------------------------------------
 Configuration and enviroments:
 Manage your setup via the backend/.env file.
 
