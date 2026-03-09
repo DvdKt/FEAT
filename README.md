@@ -41,13 +41,18 @@ Pro tip: "If the app cannot connect, use ADB in your terminal to route the traff
    adb reverse tcp:8000 tcp:8000
 
 -------------------------------------
-Configuration and enviroments:
-   Manage your setup via the backend/.env file.
+*****Configuration and enviroments:*****
+
+Manage your setup via the backend/.env file.
 
    ***Hybrid Integration:*** Kotlin-based Android app with local Python execution via Chaquopy.
+
    ***Seamless Connectivity:*** Direct communication between the mobile client and a Linux-based Python backend.
+   
    ***Advanced AI Inference:*** Utilizes OG_FEAT (Few-Shot Embedding Adaptation Transformer) for high-accuracy recognition.
+   
    ***Flexible Operation:*** Supports both Semi-Automatic (human-in-the-loop) and Full-Automatic inference modes.
+   
    ***Customizable Logic:*** Granular control over confidence thresholds (T_CONF) and prediction margins (T_MARGIN).
 
 -------------------------------------
