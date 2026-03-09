@@ -38,13 +38,11 @@ Pro tip: "If the app cannot connect, use ADB in your terminal to route the traff
 Configuration and enviroments:
 Manage your setup via the backend/.env file.
 
-Variable,Description,Default
-DATA_DIR,Directory for stored data,~/WerkzeugerkennungData
-API_KEY,Optional security header,None
-REQUIRE_API_KEY,Enforce X-API-Key for POST/PUT,false
-OG_FEAT_INIT_WEIGHTS,Path to pretrained weights,OG_FEAT/saves/...
-T_CONF,Minimum confidence to accept,0.8
-T_MARGIN,Min gap between top-1 and top-2,0.1
+**Hybrid Integration:** Kotlin-based Android app with local Python execution via Chaquopy.
+**Seamless Connectivity:** Direct communication between the mobile client and a Linux-based Python backend.
+**Advanced AI Inference:** Utilizes OG_FEAT (Few-Shot Embedding Adaptation Transformer) for high-accuracy recognition.
+**Flexible Operation:** Supports both Semi-Automatic (human-in-the-loop) and Full-Automatic inference modes.
+**Customizable Logic:** Granular control over confidence thresholds (T_CONF) and prediction margins (T_MARGIN).
 
 -------------------------------------
 *****OG_FEAT Model Setup*****
@@ -57,7 +55,7 @@ Download the file from https://github.com/Sha-Lab/FEAT and update OG_FEAT_INIT_W
 - Semi-Automatic: Every prediction requires manual confirmation before saving (env_code=PostTraining).
 - Full-Automatic: High-confidence predictions save automatically; low-confidence ones prompt for correction.
 -------------------------------------
-Troubleshooting:
+**Troubleshooting:**
 - Firewall Issues: Ensure your OS allows incoming connections for Python/Uvicorn.
 - 127.0.0.1 Error: If the script prints a loopback address, find your LAN IP manually (e.g., ipconfig getifaddr en0).
 - Port Conflicts: If 8000 is in use, modify BACKEND_PORT in .env and restart the backend.
