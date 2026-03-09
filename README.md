@@ -1,5 +1,7 @@
 # Werkzeugerkennung
+
 ATP Projektarbeit - An integrated mobile-to-backend solution for tool recognition using Android (Kotlin), Python (Chaquopy), and PyTorch (FEAT).
+
 -------------------------------------
 *****Vision*****
 
@@ -13,6 +15,7 @@ Bridge high-performance deep learning backends with mobile accessibility. This p
 - Advanced AI Inference: Utilizes OG_FEAT (Few-Shot Embedding Adaptation Transformer) for high-accuracy recognition.
 - Flexible Operation: Supports both Semi-Automatic (human-in-the-loop) and Full-Automatic inference modes.
 - Customizable Logic: Granular control over confidence thresholds (T_CONF) and prediction margins (T_MARGIN).
+
 -------------------------------------
 *****QUICK START*****
 
@@ -25,6 +28,7 @@ Installation:
 1. Clone the repository using: git clone <repo_url>
 2. Initialize the backend using the install_linux.sh script
 3. Run the back end server using the run_backend_linux.sh script
+
 -------------------------------------
 *****ANDROID CONFIGURATION*****
 
@@ -50,11 +54,13 @@ Manage your setup via the backend/.env file.
 
 The pretrained weights (feat-5-shot.pth) are reqired but not tracked in git.
 Download the file from https://github.com/Sha-Lab/FEAT and update OG_FEAT_INIT_WEIGHTS in your .env to the absolute path of the file.
+
 -------------------------------------
 *****Inference Modes*****
 
 - Semi-Automatic: Every prediction requires manual confirmation before saving (env_code=PostTraining).
 - Full-Automatic: High-confidence predictions save automatically; low-confidence ones prompt for correction.
+
 -------------------------------------
 **Troubleshooting:**
 - Firewall Issues: Ensure your OS allows incoming connections for Python/Uvicorn.
